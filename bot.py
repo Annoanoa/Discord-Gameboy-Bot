@@ -19,6 +19,7 @@ intents.reactions=True
 intents.members=True
 client=discord.Client(intents=intents)
 emoji_to_input={'🅰️':WindowEvent.PRESS_BUTTON_A,'🅱️':WindowEvent.PRESS_BUTTON_B,'⬆️':WindowEvent.PRESS_ARROW_UP,'⬇️':WindowEvent.PRESS_ARROW_DOWN,'⬅️':WindowEvent.PRESS_ARROW_LEFT,'➡️':WindowEvent.PRESS_ARROW_RIGHT,'⭐':WindowEvent.PRESS_BUTTON_START,'🌕':WindowEvent.PRESS_BUTTON_SELECT}
+emoji_to_input2={'🅰️':WindowEvent.RELEASE_BUTTON_A,'🅱️':WindowEvent.RELEASE_BUTTON_B,'⬆️':WindowEvent.RELEASE_ARROW_UP,'⬇️':WindowEvent.RELEASE_ARROW_DOWN,'⬅️':WindowEvent.RELEASE_ARROW_LEFT,'➡️':WindowEvent.RELEASE_ARROW_RIGHT,'⭐':WindowEvent.RELEASE_BUTTON_START,'🌕':WindowEvent.RELEASE_BUTTON_SELECT}
 async def manage_savestates():
 	while not client.is_closed():await asyncio.sleep(20*60);pyboy.save_state(open(SAVE_STATE_FILE,'wb'))
 async def send_initial_message(channel):
@@ -36,11 +37,17 @@ async def update_game_frame(message):
 				if current_image_hash!=last_image_hash:new_file=discord.File(fp=image_binary,filename='screenshot.png');new_embed=discord.Embed(title='<3 - AnoAno');new_embed.set_image(url='attachment://screenshot.png');await message.edit(embed=new_embed,attachments=[new_file]);last_image_hash=current_image_hash
 		await asyncio.sleep(1/(60//2))
 @client.event
-async def on_reaction_add(reaction,user):
-	if user.bot:return
-	if reaction.message.id==initial_message.id:
-		input_event=emoji_to_input.get(str(reaction))
-		if input_event:pyboy.send_input(input_event);await reaction.remove(user)
+async def on_reaction_add(reaction, user):
+    if user.bot:
+        return
+    if reaction.message.id == initial_message.id:
+        input_event = emoji_to_input.get(str(reaction))
+        release_event = emoji_to_input2.get(str(reaction))
+        if input_event and release_event:
+            pyboy.send_input(input_event)
+            await asyncio.sleep(0.25)
+            pyboy.send_input(release_event)
+            await reaction.remove(user)
 @client.event
 async def on_ready():
 	print(f"{client.user} has connected to Discord!")
